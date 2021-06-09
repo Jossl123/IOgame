@@ -1,11 +1,12 @@
+//const { Vector2d } = require("./Vector")
 var canvas
 var ctx
 var player = {
-    pos: {x: 10, y: 10},
+    pos: new Vector2d(10, 10),
     speed: 3,
+    dir: new Vector2d(0, 0),
     color: "#000000"
 }
-
 var isKeyDown = false
 var keyDown = 0
 
@@ -70,6 +71,9 @@ function drawPlayers(){
     // ctx.fill();
     for (let opponentName in opponents) {
         var opponent = opponents[opponentName]
+        if(getDistToCircle(player.pos, opponent.pos, opponent.r + player.size) <= 0){
+            bounceToBall(player.pos, opponent.pos)
+        }
         ctx.beginPath();
         ctx.arc(opponent.pos.x, opponent.pos.y, opponent.size, 0, Math.PI * 2);
         ctx.fillStyle = opponent.color;
@@ -84,9 +88,14 @@ function drawPlayers(){
 
 function drawFood(){
     ctx.beginPath();
-    ctx.arc(food.pos.x, food.pos.y,food.r * 2, 0, Math.PI * 2)
+    ctx.arc(food.pos.x, food.pos.y,food.r, 0, Math.PI * 2)
     ctx.fillStyle = player.color;
     ctx.fill();
+}
+
+function bounceToBall(p1, p2){
+    var v = p2.copy().sub(p1)
+    player.dir.add(v.normalize())
 }
 
 setTimeout(function() {
@@ -100,23 +109,24 @@ setTimeout(function() {
 function move(keyCode) {
     switch (keyCode) {
         case 37:
-            player.pos.x -= player.speed
-            break;
+            player.dir.y -= player.speed
         case 39:
-            player.pos.x += player.speed
-            break;
+            player.dir.y += player.speed
         case 38:
-            player.pos.y -= player.speed
-            break;
+            player.dir.x -= player.speed
         case 40:
-            player.pos.y += player.speed
+            player.dir.x += player.speed
+        default:
+            player.dir.normalize()
             break;
     }
+    player.pos.add(player.dir)
     drawPlayers()
     ws.send(JSON.stringify({
         title: "playerPos",
         body: player
     }))
+    //si je touche la nouriture
     if(getDistToCircle(player.pos, food.pos, food.r + player.size) <= 0){
         grow()
         food = new Food(Math.random() * 200, Math.random() * 300, 3)

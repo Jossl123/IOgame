@@ -1,3 +1,5 @@
+const { Vector2d } =  require('./public/Vector')
+
 const express = require("express");
 const WebSocket = require('ws');
 const http = require('http');
@@ -26,12 +28,14 @@ wss.on('connection', (ws) => {
         switch (title) {
             case "joinGame":
                 games.first.players.push(ws)
+                console.log(Vector2d)
                 ws.infos = {
-                    pos: {x: 10, y: 10},
                     name: generate_token(10),
-                    color: generate_color(),
+                    pos: new Vector2d(10, 10),
+                    dir: new Vector2d(0, 0),
+                    speed: 3,
                     size: 10,
-                    speed: 3
+                    color: generate_color()
                 }
                 var oppoObj = {}
                 for(let client of games.first.players){
